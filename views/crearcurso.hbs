@@ -1,0 +1,48 @@
+{{>header}}
+
+<h4 class="text-center">Formulario para ingresar un nuevo curso</h4>
+<h6 class="text-center">Ingrese sus datos en el siguiente formulario</h6>
+<form action="/crear_resultado" method="post">
+	<div class=" form-group row">
+		<div class="col">
+			<label for="id_curso">Id</label>
+			<input type="number" class="form-control" placeholder="" name="id_curso" required>
+		</div>
+		<div class="col">
+			<label for="nombre">Nombre</label>
+			<input type="text" class="form-control" placeholder="" name="nombre" required>
+		</div>
+	</div>
+
+	<div class="form-group row">
+		<div class="col-md-6">
+			<label for="modalidad">Modalidad</label>
+			<select class="form-control" name="modalidad">
+				<option value="presencial">Presencial</option>
+				<option value="virtual">Virtual</option>
+			</select>
+		</div>
+
+		<div class="col-md-6">
+			<label for="valor">Valor</label>
+			<input type="number" class="form-control" placeholder="" name="valor" required>
+		</div>
+	</div>
+
+	<div class="form-group row">
+		<div class="col-md-6">
+			<label for="descripcion">Descripcion</label>
+			<input type="texarea" class="form-control" placeholder="" name="descripcion" required>
+		</div>
+
+		<div class="col-md-6">
+			<label for="intensidad">Intensidad Horaria</label>
+			<input type="number" class="form-control" placeholder="" name="intensidad">
+		</div>
+	</div>
+
+
+	<button class="btn btn-primary" text-center>Enviar</button>
+</form>
+
+{{>footer}}
