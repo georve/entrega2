@@ -116,10 +116,12 @@ hbs.registerHelper('listarEstInscritos', () => {
 							Curso: ${curso.id_curso}-${curso.nombre}
 							</h5>
 							</button>
+
 						</h2>
 						<div class="text-center">
 							<a href='/actualizarCurso?curso=${curso.id_curso}' class='btn btn-danger' role='button' aria-pressed='true'>Cerrar</a></td>
 						</div>
+
 						<div id="collapse${i}" class="collapse" aria-labelledby="heading${i}" data-parent="#accordionExample">
 						<div class="card-body">
 						<h6 class="text-center">Estudiantes Inscritos</h6>`
