@@ -3,7 +3,7 @@ const app=express();
 const path=require('path');
 const hbs=require('hbs');
 const bodyParser=require('body-parser');
-const port=3000;
+const port=process.env.PORT || 3000;
 require ('./helper');
 const directoriopublico=path.join(__dirname,'../public');
 const directoriopartials=path.join(__dirname,'../template/partials');
