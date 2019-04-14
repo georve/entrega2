@@ -1,7 +1,7 @@
 {{>header}}
 {{{mensajeInscribir}}}
 <div style="display:{{existeCurso}}">
-	<h4 class="text-center">Formulario para insribirse en un curso</h4>
+	<h4 class="text-center">Formulario para inscribirse en un curso</h4>
 	<h6 class="text-center">Ingrese sus datos en el siguiente formulario</h6>
 	<form action="/inscribirResultado" method="post">
 		<div class="form-group row">
@@ -31,7 +31,7 @@
 			<div class="form-group row">
 				<div class="col-md-6">
 					<label for="cursos">Cursos Disponibles</label>
-					{{{selectCursos}}}
+					{{{selectCursos cursos}}}
 				</div>
 			</div>
 

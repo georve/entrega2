@@ -1,15 +1,19 @@
 const fs = require('fs');
-
+const Curso=require('../modelo/cursos');
 const listarCursos = () => {
+	console.log('listarCursos');
     listaCursos = [];
-	try {
-        listaCursos = require('./cursos.json');
-    }
-	catch (error) {
-        console.log('error',error);
-    } 
+	Curso.find({}).exec((err,respuesta)=>{
+       if(err){
+		console.log('error',error);
+	   }
+	   console.log('consulta exitosa');
+	   console.log(respuesta);
+	   listaCursos =respuesta;
+	   
+	});
 
-    return listaCursos;
+
 }
 
 const listarInscritos = () => {
@@ -25,7 +29,33 @@ const listarInscritos = () => {
 }
 
 const crearCurso = (curso) => {
-	listaCursos = listarCursos();
+	console.log('crear curso');
+    let cursoToSave=new Curso({
+		id_curso:curso.id_curso,
+		 nombre:curso.nombre,
+		 modalidad:curso.modalidad,
+		 valor:curso.valor,
+		 descripcion:curso.descripcion,
+		 intensidad:curso.intensidad,
+		 estado:'disponible'
+
+	});
+	console.log(cursoToSave);
+
+	cursoToSave.save((err,resultado)=>{
+		if(err){
+			console.log('Error al crear el curso');
+			return "<div class='alert alert-danger' role='alert'>No se pudo guardar el curso con el nombre "+cursoToSave.nombre+"</div>";
+		}
+		console.log('creado con exito');
+		console.log(resultado);
+        return guardarCursos(resultado.__id,resultado.nombre);
+	});
+
+
+
+
+	/*listaCursos = listarCursos();
     
 	let duplicado = listaCursos.find(nom => nom.id_curso == curso.id_curso);
     if (!duplicado) {
@@ -35,14 +65,11 @@ const crearCurso = (curso) => {
 	}
 	else {
 		return "<div class='alert alert-danger' role='alert'>Ya existe un curso con el mismo id: "+curso.id_curso+"</div>";
-	}
+	}*/
 }
 
 const guardarCursos = (id,nombre) => {
-	let datos = JSON.stringify(listaCursos);
-    fs.writeFile('src/cursos.json', datos, (err) => {
-        if (err) throw (err);
-	});	
+
     return "<div class='alert alert-success' role='alert'>El curso "+ id +"-"+ nombre+" fue creado satisfactoriamente</div>";
 	
 }

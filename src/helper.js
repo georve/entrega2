@@ -5,9 +5,9 @@ hbs.registerHelper('crearCurso', (curso) => {
 	return funciones.crearCurso(curso);
 });
 
-hbs.registerHelper('listarCursos', () => {
+hbs.registerHelper('listarCursos', (listaCursos) => {
 
-	listaCursos = funciones.listarCursos();
+
 
 	let texto = "";
 
@@ -91,10 +91,9 @@ hbs.registerHelper('listarInscritosCurso', (curso) => {
 	return texto;
 });
 
-hbs.registerHelper('listarEstInscritos', () => {
+hbs.registerHelper('listarEstInscritos', (listaInscritos,listaCursos) => {
 
-	listaCursos = funciones.listarCursos();
-	listaInscritos = funciones.listarInscritos();
+
 
 	let texto = '';
 
@@ -119,7 +118,7 @@ hbs.registerHelper('listarEstInscritos', () => {
 
 						</h2>
 						<div class="text-center">
-							<a href='/actualizarCurso?curso=${curso.id_curso}' class='btn btn-danger' role='button' aria-pressed='true'>Cerrar</a></td>
+							<a href='/actualizarCurso?id_curso=${curso.id_curso}' class='btn btn-danger' role='button' aria-pressed='true'>Cerrar</a></td>
 						</div>
 
 						<div id="collapse${i}" class="collapse" aria-labelledby="heading${i}" data-parent="#accordionExample">
@@ -149,9 +148,7 @@ hbs.registerHelper('listarEstInscritos', () => {
 	return texto;
 });
 
-hbs.registerHelper('selectCursos', () => {
-
-	listaCursos = funciones.listarCursos();
+hbs.registerHelper('selectCursos', (listaCursos) => {
 
 	let texto = '';
 
@@ -169,17 +166,12 @@ hbs.registerHelper('selectCursos', () => {
 	return texto;
 });
 
-hbs.registerHelper('eliminarInscrito', (documento, curso) => {
+hbs.registerHelper('eliminarInscrito', (inscritos, curso) => {
 
-	let nuevo = funciones.eliminarInscrito(documento);
+
 
 	let texto = "";
 
-	if (nuevo != null) {
-
-		texto = "<div class='alert alert-success' role='alert'>El estudiante "+ documento +" fue eliminado satisfactoriamente del curso "+ curso +"</div>"
-     
-		let inscritos = nuevo.filter(est => est.curso == curso);
 
 		if (inscritos != null && Object.keys(inscritos).length != 0) {
 
@@ -207,10 +199,8 @@ hbs.registerHelper('eliminarInscrito', (documento, curso) => {
 		else {
 			texto = texto + "<div class='alert alert-warning' role='alert'>No hay inscritos en el curso"+curso+"</div>"
 		}
-	}
-	else {
-		texto = "<div class='alert alert-danger' role='alert'>Ocurrió un problema al intentar eliminar el estudiante</div>"
-	}
+	
+
 	
 	return texto;
  
@@ -222,12 +212,3 @@ hbs.registerHelper('actualizarCurso', (curso) => {
 	}
 });
 
-hbs.registerHelper('existeCurso', (curso) => {
-	listaCursos = funciones.listarCursos();
-    return (Object.keys(listaCursos).length != 0 && listaCursos.some(c => c.estado == 'disponible'))?'':'none';
-});
-
-hbs.registerHelper('mensajeInscribir', (curso) => {
-	listaCursos = funciones.listarCursos();
-    return (Object.keys(listaCursos).length != 0 && listaCursos.some(c => c.estado == 'disponible'))?'':"<div class='alert alert-warning' role='alert'>No hay cursos disponibles para inscripcion</div>";
-});
