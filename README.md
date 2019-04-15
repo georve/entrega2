@@ -2,7 +2,8 @@ README
 
 Pasos para correr la aplicacion
 
-1. Descargar el repositorio y desde la carpeta en la terminal ejecutar:npm install.
+1. Cuando arranca la aplicacion se crea un usuario coordinador por defecto
+   doc:0, Password:12345
 
-2. Ejecutar nodemon -e js,hbs,html,json
+2. Para ingresar con otro usuario debe primero registrarlo y luego hacer login
 3. En el navegador ir a la url: http://localhost:3000/
