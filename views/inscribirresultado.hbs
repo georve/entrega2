@@ -1,5 +1,7 @@
 {{>header}}
-
-	<p> {{{inscribirCurso estudiante}}} </p>
-
+{{>navbar}}
+ {{{mensaje}}}
+ {{#if inscritos_curso}}
+	<p> {{{listarInscritosCurso id_curso inscritos_curso}}} </p>
+ {{/if}}
 {{>footer}}

@@ -1,37 +1,38 @@
 {{>header}}
+{{>navbar}}
 {{{mensajeInscribir}}}
 <div style="display:{{existeCurso}}">
-	<h4 class="text-center">Formulario para insribirse en un curso</h4>
+	<h4 class="text-center">Formulario para inscribirse en un curso</h4>
 	<h6 class="text-center">Ingrese sus datos en el siguiente formulario</h6>
 	<form action="/inscribirResultado" method="post">
 		<div class="form-group row">
 			<div class="col-md-6">
 				<label for="doc">Documento de Identidad</label>
-				<input type="text" class="form-control" placeholder="" name="doc" required>
+				<input type="text" class="form-control" placeholder="" value={{documento}} name="doc" required>
 			</div>
 
 			<div class="col-md-6">
 				<label for="correo">Correo Eletronico</label>
-				<input type="email" class="form-control" placeholder="" name="correo" required>
+				<input type="email" class="form-control" placeholder="" value={{correo}} name="correo" required>
 			</div>
 		</div>
 
 		<div class="form-group row">
 			<div class="col-md-6">
 				<label for="nombre">Nombre</label>
-				<input type="text" class="form-control" placeholder="" name="nombre" required>
+				<input type="text" class="form-control" placeholder="" value={{nombre}} name="nombre" required>
 			</div>
 
 				<div class="col-md-6">
 					<label for="telefono">Telefono</label>
-					<input type="phone" class="form-control" placeholder="" name="telefono" required>
+					<input type="phone" class="form-control" placeholder="" value={{telefono}} name="telefono" required>
 				</div>
 			</div>
 
 			<div class="form-group row">
 				<div class="col-md-6">
 					<label for="cursos">Cursos Disponibles</label>
-					{{{selectCursos}}}
+					{{{selectCursos cursos}}}
 				</div>
 			</div>
 
