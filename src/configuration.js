@@ -1,2 +1,12 @@
 process.env.PORT = process.env.PORT || 3000;
-process.env.URLDB = 'mongodb://localhost:27017/estudiantes'
+process.env.NODE_ENV = process.env.NODE_ENV || 'local';
+
+let urlDB
+if (process.env.NODE_ENV === 'local'){
+	urlDB = 'mongodb://localhost:27017/estudiantes';
+}
+else {
+	urlDB = 'mongodb+srv://georve:oPaEv7YOmgWt39mq@nodecursejs-lddv7.mongodb.net/estudiantes?retryWrites=true'
+}
+
+process.env.URLDB = urlDB
