@@ -6,10 +6,11 @@ const bodyParser=require('body-parser');
 const mongoose=require('mongoose');
 const Curso=require('../modelo/cursos');
 const Inscrito=require('../modelo/inscritos');
+const Usuario=require('../modelo/usuario');
 //const bcrypt=require('bcrypt');
 const session=require('express-session');
-const port=3000;
 require ('./helper');
+require('./configuration');
 const directoriopublico=path.join(__dirname,'../public');
 const directoriopartials=path.join(__dirname,'../template/partials');
 const directoriobootstrapcss = path.join(__dirname,'../node_modules/bootstrap/dist/css');
@@ -35,16 +36,129 @@ app.use(function (req, res, next) {
 });
 
 
+app.use(session({
+	secret:'keyboard cat',
+	resave:true,
+	saveUninitialized:true
+}));
+
+app.use((req,res,next)=>{
+	if(req.session.usuario){
+		res.locals.sesion=true;
+		res.locals.nombre=req.session.nombre;
+	}
+    next();
+});
+
+
+app.post('/registrar',(req,res)=>{
+	let usuario=new Usuario({
+		doc:req.body.documento,
+		nombre:req.body.nombre,
+		correo:req.body.email,
+		telefono:req.body.telf,
+		password:req.body.password,
+		rol:'aspirante'
+	});
+    console.log(usuario);
+	Usuario.find({doc:req.body.documento,correo:req.body.email}).exec((err,encontrado)=>{
+		if(err){
+			return console.log(err);
+		}
+		if(!encontrado||encontrado.length == 0){
+			//inscribir
+			console.log('no encontrado');
+			usuario.save((err,resultado)=>{
+				if(err){
+					console.log(err);
+					return res.render('register',{
+						mensaje:'Error al registrar al Usuario'
+					});
+				}
+                console.log(resultado);
+				res.render('register',{
+					mensaje:'Registro Exitoso'
+				});
+
+
+			});
+		}else{
+			console.log('encontrado');
+			res.render('register',{
+				mensaje:'Documento y correo registrado'
+			});
+		}
+	});
+
+
+
+});
+
+
+app.post('/login',(req,res)=>{
+	console.log('login');
+	console.log(req.body);
+    Usuario.findOne({doc:req.body.email},(err,resultado)=>{
+		if(err){
+		 return	console.log(err);
+		}
+
+		if(!resultado){
+			console.log('No encontrado');
+           return 	res.render('login',{
+			            mensaje:'Usuario no existe'
+		               });
+		}
+        console.log(resultado);
+		if(resultado.password!=req.body.password){
+			return 	res.render('login',{
+				mensaje:'Password Invalido'
+			   });
+		}
+
+		//variables de session
+		req.session.usuario=resultado._id;
+		req.session.nombre=resultado.nombre;
+		req.session.rol=resultado.rol;
+		req.session.correo=resultado.correo;
+		req.session.telefono=resultado.telefono;
+		req.session.documento=resultado.doc;
+
+		res.render('index',{
+			mensaje:req.session.nombre,
+			sesion:true,
+			nombre:req.session.nombre,
+			coordinador:req.session.rol=='coordinador',
+			aspirante:req.session.rol=='aspirante'
+		   });
+	})
+
+
+});
+
+
 app.get('/',(req,res)=>{
-    res.render('index',{
-        estudiante:'Sebastian',
-        titulo:'Inicio'
-    })
+	if(req.session.usuario){
+		res.render('index',{
+			estudiante:'Sebastian',
+			titulo:'Inicio',
+			nombre:req.session.nombre,
+			coordinador:req.session.rol=='coordinador',
+			aspirante:req.session.rol=='aspirante'
+		});
+
+	}else{
+       res.redirect('/login');
+	}
+
 });
 
 app.get('/crearcurso',(req,res)=>{
     res.render('crearcurso',{
-        titulo:'Crear Curso'
+		titulo:'Crear Curso',
+		nombre:req.session.nombre,
+		coordinador:req.session.rol=='coordinador',
+		aspirante:req.session.rol=='aspirante'
     })
 });
 
@@ -65,12 +179,18 @@ app.post('/crear_resultado', (req,res) => {
 			console.log('error al crear registro');
 		
 			res.render('crearresultado',{	
-				mensaje:"<div class='alert alert-danger' role='alert'>"+err+"</div>"
+				mensaje:"<div class='alert alert-danger' role='alert'>"+err+"</div>",
+				nombre:req.session.nombre,
+				coordinador:req.session.rol=='coordinador',
+				aspirante:req.session.rol=='aspirante'
 			});
 		}else{
 			console.log('exito al crear registro'); 
 			res.render('crearresultado',{	
-				mensaje:"<div class='alert alert-success' role='alert'>Registro exitoso</div>"
+				mensaje:"<div class='alert alert-success' role='alert'>Registro exitoso</div>",
+				nombre:req.session.nombre,
+				coordinador:req.session.rol=='coordinador',
+				aspirante:req.session.rol=='aspirante'
 			});
 		}
 
@@ -88,7 +208,10 @@ app.get('/vercursos', (req,res) => {
 	   if(err){
 		res.render('listarcursos',{
 			titulo:'Listar Cursos',
-			listado:null
+			listado:null,
+			nombre:req.session.nombre,
+			coordinador:req.session.rol=='coordinador',
+			aspirante:req.session.rol=='aspirante'
 	
 		});
 
@@ -96,7 +219,10 @@ app.get('/vercursos', (req,res) => {
 
 	   res.render('listarcursos',{
 		titulo:'Listar Cursos',
-		listado:respuesta
+		listado:respuesta,
+		nombre:req.session.nombre,
+		coordinador:req.session.rol=='coordinador',
+		aspirante:req.session.rol=='aspirante'
 
 	});
 	   
@@ -127,13 +253,19 @@ app.post('/inscribirResultado', (req,res) => {
 			   inscrito.save((err,resultadoSaved)=>{
                   if(err){
 					  return res.render('inscribirresultado',{
-						  mensaje:"<div class='alert alert-danger' role='alert'>"+err+"</div>"
+						  mensaje:"<div class='alert alert-danger' role='alert'>"+err+"</div>",
+						  nombre:req.session.nombre,
+						  coordinador:req.session.rol=='coordinador',
+						  aspirante:req.session.rol=='aspirante'
 					  });
 				  }
 
 				  if(!resultadoSaved){
 					  return res.render('inscribirresultado',{
-						mensaje:"<div class='alert alert-danger' role='alert'>No se pudo realizar la inscripción</div>"
+						mensaje:"<div class='alert alert-danger' role='alert'>No se pudo realizar la inscripción</div>",
+						nombre:req.session.nombre,
+						coordinador:req.session.rol=='coordinador',
+						aspirante:req.session.rol=='aspirante'
 					});
 				  }else{
 					Inscrito.find().exec((err,inscritos)=>{
@@ -145,7 +277,10 @@ app.post('/inscribirResultado', (req,res) => {
 							documento: resultadoSaved.doc,
 							id_curso: resultadoSaved.curso,
 							inscritos_curso: inscritos,
-							mensaje: "<div class='alert alert-success' role='alert'>El estudiante "+ resultadoSaved.doc + " fue inscrito en el curso "+ resultadoSaved.id_curso +" satisfactoriamente</div>"
+							mensaje: "<div class='alert alert-success' role='alert'>El estudiante "+ resultadoSaved.doc + " fue inscrito en el curso "+ resultadoSaved.id_curso +" satisfactoriamente</div>",
+							nombre:req.session.nombre,
+							coordinador:req.session.rol=='coordinador',
+							aspirante:req.session.rol=='aspirante'
 
 						});
 
@@ -159,7 +294,10 @@ app.post('/inscribirResultado', (req,res) => {
 			return res.render('inscribirresultado',{
 				documento: req.body.doc,
                 id_curso: req.body.curso,
-                mensaje: "<div class='alert alert-warning' role='alert'>El estudiante "+ req.body.doc + "  ya se encuentra inscrito en el curso "+ req.body.curso +"</div>"
+				mensaje: "<div class='alert alert-warning' role='alert'>El estudiante "+ req.body.doc + "  ya se encuentra inscrito en el curso "+ req.body.curso +"</div>",
+				nombre:req.session.nombre,
+				coordinador:req.session.rol=='coordinador',
+				aspirante:req.session.rol=='aspirante'
 			});
 		   }
 	   }
@@ -180,6 +318,9 @@ app.get('/inscribir', (req,res) => {
 				res.render('inscribir',{
 					existeCurso:resultado.length>0,
 					cursos:resultado,
+					nombre:req.session.nombre,
+					coordinador:req.session.rol=='coordinador',
+			        aspirante:req.session.rol=='aspirante',
 					mensajeInscribir:"<div class='alert alert-warning' role='alert'>No hay cursos disponibles para inscripcion</div>"
 				});
 
@@ -187,7 +328,13 @@ app.get('/inscribir', (req,res) => {
 				res.render('inscribir',{
 					existeCurso:resultado.length>0,
 					cursos:resultado,
-					mensajeInscribir:''
+					mensajeInscribir:'',
+					nombre:req.session.nombre,
+					correo:req.session.correo,
+					telefono:req.session.telefono,
+					documento:req.session.documento,
+					coordinador:req.session.rol=='coordinador',
+			        aspirante:req.session.rol=='aspirante'
 				});
 
 			}
@@ -198,6 +345,29 @@ app.get('/inscribir', (req,res) => {
 
 
 	});
+
+});
+
+app.get('/registrar',(req,res)=>{
+     res.render('register',{
+		 mensaje:''
+	 });
+});
+
+app.get('/login',(req,res)=>{
+	res.render('login',{
+		mensaje:''
+	});
+
+});
+
+app.get('/logout',(req,res)=>{
+	req.session.destroy((err)=>{
+		if(err){
+			return console.log(err);
+		}
+	});
+	res.redirect('/');
 
 });
 
@@ -217,7 +387,10 @@ app.get('/verinscritos', (req,res) => {
 				titulo:'Ver Inscritos',
 				curso: null,
 				listaCursos:cursos,
-				listaInscritos:inscritos
+				listaInscritos:inscritos,
+				nombre:req.session.nombre,
+				coordinador:req.session.rol=='coordinador',
+				aspirante:req.session.rol=='aspirante'
 			});
 			
 
@@ -246,7 +419,10 @@ app.get('/eliminarInscrito', (req,res) => {
 			res.render('listarinscritoscursos',{
 				doc: req.query.doc,
 				curso: req.query.curso,
-				mensaje:"<div class='alert alert-danger' role='alert'>No se encontro el estudiante</div>"
+				mensaje:"<div class='alert alert-danger' role='alert'>No se encontro el estudiante</div>",
+				nombre:req.session.nombre,
+				coordinador:req.session.rol=='coordinador',
+				aspirante:req.session.rol=='aspirante'
 			});
 
 		}
@@ -261,7 +437,10 @@ app.get('/eliminarInscrito', (req,res) => {
 				doc: req.query.doc,
 				curso: req.query.curso,
 				inscritos:inscritos,
-				mensaje:"<div class='alert alert-success' role='alert'>El estudiante "+ resultado.doc +" fue eliminado satisfactoriamente del curso "+ resultado.curso +"</div>"
+				mensaje:"<div class='alert alert-success' role='alert'>El estudiante "+ resultado.doc +" fue eliminado satisfactoriamente del curso "+ resultado.curso +"</div>",
+				nombre:req.session.nombre,
+				coordinador:req.session.rol=='coordinador',
+				aspirante:req.session.rol=='aspirante'
 			});
 
 		});
@@ -284,7 +463,10 @@ app.get('/actualizarCurso', (req,res) => {
             return res.render('listarinscritos',{
 				curso: req.query.id_curso,
 				listaCursos:null,
-				listaInscritos:null,               
+				listaInscritos:null,   
+				nombre:req.session.nombre,
+				coordinador:req.session.rol=='coordinador',
+				aspirante:req.session.rol=='aspirante',            
                 mensaje: "<div class='alert alert-danger' role='alert'>El curso "+ req.query.id_curso + " no se pudo cerrar</div>"
             }); 
         }
@@ -305,6 +487,9 @@ app.get('/actualizarCurso', (req,res) => {
 					curso: resultado.id_curso,
 					listaCursos:cursos,
 					listaInscritos:inscritos,
+					nombre:req.session.nombre,
+					coordinador:req.session.rol=='coordinador',
+			        aspirante:req.session.rol=='aspirante',
 					mensaje: "<div class='alert alert-success' role='alert'>El curso "+ resultado.id_curso + " fue cerrado satisfactoriamente</div>"
 				});
 				
@@ -321,8 +506,14 @@ app.get('/actualizarCurso', (req,res) => {
 
 });
 
+app.get('*',(req,res)=>{
+     res.render('error',{
+		 titulo:'Error'
+	 });
+});
 
-mongoose.connect('mongodb://localhost:27017/estudiantes',{useNewUrlParser:true},(err,resultado)=>{
+
+mongoose.connect(process.env.URLDB,{useNewUrlParser:true},(err,resultado)=>{
 	if (err){
 		return console.log("error")
 	}
@@ -331,6 +522,6 @@ mongoose.connect('mongodb://localhost:27017/estudiantes',{useNewUrlParser:true},
 });
 
 
-app.listen(port,()=>{
-    console.log('Listening on port '+port);
+app.listen(process.env.PORT,()=>{
+    console.log('Listening on port '+process.env.PORT);
 });

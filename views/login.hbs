@@ -1,0 +1,44 @@
+       {{>header}}
+        <!--hero section-->
+        <section class="hero">
+            <div class="container">
+                <div class="row">
+                    <div class="col-md-6 col-sm-8 mx-auto">
+                        <div class="card border-none">
+                            <div class="card-body">
+                                <div class="mt-2">
+                                    <img src="img/male.jpg" alt="Male" class="brand-logo mx-auto d-block img-fluid rounded-circle"/>
+                                </div>
+                                <p class="mt-4 text-white lead text-center">
+                                    Login para acceder a su cuenta
+                                </p>
+                                {{mensaje}}
+                                <div class="mt-4">
+                                    <form  action='/login' method='post'>
+                                        <div class="form-group">
+                                            <input type="text" class="form-control" name="email"  value="" placeholder="Email" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <input type="password" class="form-control" name="password"  value="" placeholder="Password" required>
+                                        </div>
+                                        <label class="custom-control custom-checkbox mt-2">
+                                            <input type="checkbox" class="custom-control-input">
+                                            <span class="custom-control-indicator"></span>
+                                            <span class="custom-control-description text-white">Keep me logged in</span>
+                                        </label>
+                                        <button type="submit" class="btn btn-primary float-right">Entrar</button>
+                                    </form>
+                                    <div class="clearfix"></div>
+                                    <p class="content-divider center mt-4"><span>or</span></p>
+                                </div>
+                                <p class="text-center">
+                                    No tiene cuenta registrada? <a href="/registrar">Registrar</a>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="clearfix"></div>
+                </div>
+            </div>
+        </section>
+        {{>footer}}
