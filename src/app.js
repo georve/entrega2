@@ -148,7 +148,48 @@ app.get('/',(req,res)=>{
 		});
 
 	}else{
-       res.redirect('/login');
+	   //res.redirect('/login');
+	   
+	   //////crear usuario coordinador
+	   let coordinador = new Usuario({
+        doc: '0',
+        nombre: 'Coordinador',
+        password: '12345',
+        correo: 'coordinador@gmail.com',
+        telefono: '0',
+        rol:'coordinador'
+    })
+
+    Usuario.find({doc:'0', rol:'coordinador'}).exec((err, encontrado)=> {
+        if (err) {
+            return console.log(err)
+        }
+        
+        if (!encontrado || encontrado.length == 0) {
+            
+            coordinador.save((err, resultado)=> {
+                if (err) {
+                    console.log(err);
+                }else{
+					console.log('usuario creado');
+				}
+   
+            });
+        }else{
+			res.redirect('/login');
+		}
+        
+
+    })
+
+
+
+
+
+
+
+
+
 	}
 
 });
