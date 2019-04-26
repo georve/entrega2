@@ -2,6 +2,7 @@ const express=require('express');
 const app=express();
 const path=require('path');
 const hbs=require('hbs');
+const sgMail=require('@sendgrid/mail');
 const bodyParser=require('body-parser');
 const mongoose=require('mongoose');
 const Curso=require('../modelo/cursos');
@@ -27,6 +28,7 @@ app.use('/css', express.static(directoriobootstrapcss));
 app.use('/js', express.static(directoriojquery));
 app.use('/js', express.static(directoriopopper));
 app.use('/js', express.static(directoriobootstrapjs));
+
 
 app.use(function (req, res, next) {
     res.header('Cache-Control', 'private, no-cache, no-store, must-revalidate');
@@ -60,6 +62,13 @@ app.post('/registrar',(req,res)=>{
 		password:req.body.password,
 		rol:'aspirante'
 	});
+
+	const msg={
+		to:req.body.email,
+		from:'georve@gmail.com',
+		subject:'Bienvenido',
+		text:'Bienvenido a la paginas de cursos'
+	};
     console.log(usuario);
 	Usuario.find({doc:req.body.documento,correo:req.body.email}).exec((err,encontrado)=>{
 		if(err){
@@ -75,6 +84,7 @@ app.post('/registrar',(req,res)=>{
 						mensaje:'Error al registrar al Usuario'
 					});
 				}
+				sgMail.send(msg);
                 console.log(resultado);
 				res.render('register',{
 					mensaje:'Registro Exitoso'
