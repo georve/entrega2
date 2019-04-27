@@ -11,4 +11,4 @@ else {
 
 process.env.URLDB = urlDB;
 
-process.env.SENGRID_API_KEY='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'
+process.env.SENGRID_API_KEY='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'

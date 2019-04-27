@@ -10,6 +10,7 @@ const Inscrito=require('../modelo/inscritos');
 const Usuario=require('../modelo/usuario');
 //const bcrypt=require('bcrypt');
 const session=require('express-session');
+
 require ('./helper');
 require('./configuration');
 const directoriopublico=path.join(__dirname,'../public');
@@ -22,7 +23,7 @@ const directoriobootstrapjs = path.join(__dirname,'../node_modules/bootstrap/dis
 app.use(express.static(directoriopublico));
 hbs.registerPartials(directoriopartials);
 app.use(bodyParser.urlencoded({extended:false}));
-
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 app.set('view engine','hbs');
 app.use('/css', express.static(directoriobootstrapcss));
 app.use('/js', express.static(directoriojquery));
