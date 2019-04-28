@@ -24,6 +24,9 @@ const inscritoSchema=new Schema({
       curso:{
           type:Number,
           require:true
+      },
+      file:{
+          type:Buffer
       }
 
 
