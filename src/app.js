@@ -69,7 +69,6 @@ app.use(session({
 }));
 
 app.use((req,res,next)=>{
-	   console.log('use');
 	if(req.session.usuario){		
 		res.locals.sesion=true;
 		res.locals.nombre=req.session.nombre;
@@ -79,8 +78,6 @@ app.use((req,res,next)=>{
 
 app.get('/confirmacion',(req,res)=>{
 	//find token
-	console.log('confirmacion');
-
 	Token.findOne({token:req.query.token},(err,resultado)=>{
 		if(err){
 			return res.render('register',{
@@ -295,15 +292,6 @@ app.get('/',(req,res)=>{
         
 
     })
-
-
-
-
-
-
-
-
-
 	}
 
 });
@@ -434,7 +422,7 @@ app.post('/inscribirResultado',upload.single('file'), (req,res) => {
 							id_curso: resultadoSaved.curso,
 							inscritos_curso: inscritos,
 							mensaje: "<div class='alert alert-success' role='alert'>El estudiante "+ resultadoSaved.doc + " fue inscrito en el curso "+ resultadoSaved.id_curso +" satisfactoriamente</div>",
-							imagen:resultadoSaved.file.toString(base64),
+							imagen:resultadoSaved.file.toString('base64'),
 							nombre:req.session.nombre,
 							coordinador:req.session.rol=='coordinador',
 							aspirante:req.session.rol=='aspirante'
@@ -502,6 +490,145 @@ app.get('/inscribir', (req,res) => {
 
 
 	});
+
+});
+
+app.get('/forgetPassword',(req,res)=>{
+	res.render('olvidoPassword',{
+		mensaje:''
+	});
+
+});
+
+app.post('/forgetPassword',(req,res)=>{
+
+	Usuario.findOne({correo:req.body.email},(err,resultado)=>{
+		if(err){
+		 return	console.log(err);
+		}
+
+		if(!resultado){
+			console.log('No encontrado');
+           return 	res.render('olvidoPassword',{
+			            mensaje:'Usuario no existe'
+		               });
+		}
+		console.log(resultado);
+
+		var token=new Token({_userId:resultado._id,token:crypto.randomBytes(16).toString('hex')});
+		token.save((err,tokenSaved)=>{
+			if(err){
+				console.log(err);
+				return res.render('olvidoPassword',{
+					mensaje:'Error al generar token de reset'
+				}); 
+			}
+
+			resultado.resetPasswordToken=tokenSaved.token;
+			resultado.resetPasswordExpires=Date.now() + 3600000;
+
+			resultado.save((err,exito)=>{
+               if(err){
+				console.log(err);
+				return res.render('olvidoPassword',{
+					mensaje:'Error al producir el reset'
+				}); 
+			   }
+
+			   const msg={
+				to:resultado.correo,
+				from:process.env.EMAIL,
+				subject:'Reset correo',
+				text:' Sr(a) '+resultado.nombre+'\n\n Para resetear la cuente presione el link link: \nhttp:\/\/'+req.headers.host+'\/reset\/'+tokenSaved.token+'\n'
+			};
+			sgMail.send(msg);
+			res.render('olvidoPassword',{
+				mensaje:'Correo de reseteo Enviado'
+			});
+
+
+			})
+
+		});
+
+
+
+
+
+	})
+
+	
+});
+
+app.get('/reset/:token',(req,res)=>{
+	Usuario.findOne({resetPasswordToken:req.params.token,resetPasswordExpires:{ $gt: Date.now() }},(err,resultado)=>{
+       if(err){
+		   console.log(err);
+		   return res.redirect('/forgetPassword');
+	   }
+
+	   if(!resultado){
+		console.log('No existe el token');
+		return res.render('olvidoPassword',{
+           mensaje:'Token expirado'
+		});
+	   }
+
+	   res.render('resetPassword',{
+		   mensaje:'',
+		   token:resultado
+	   })
+
+
+	})
+
+});
+
+app.post('/reset/:token',(req,res)=>{
+	console.log('/resetPost');
+	console.log(req.params.token);
+	Usuario.findOne({resetPasswordToken:req.params.token,resetPasswordExpires:{ $gt: Date.now() }},(err,resultado)=>{
+       if(err){
+		return res.render('resetPassword',{
+			mensaje:'Token expirado'
+		 });
+	   }
+
+	   if(!resultado){
+		return res.render('resetPassword',{
+           mensaje:'Token expirado'
+		});
+	   }
+
+	   resultado.password=req.body.password;
+	   resultado.resetPasswordToken = undefined;
+	   resultado.resetPasswordExpires = undefined;
+
+	   resultado.save((err,saved)=>{
+          if(err){
+			return res.render('resetPassword',{
+				mensaje:'Token expirado'
+			 });
+		  }
+
+		  const msg={
+			to:resultado.correo,
+			from:process.env.EMAIL,
+			subject:'Cambio de Contrasena',
+			text:' Sr(a) '+resultado.nombre+'\n\n La Constrasena fue modificada de manera exitosa \n'
+		};
+		sgMail.send(msg);
+		res.render('resetPassword',{
+			mensaje:'Csmbio de password exitoso'
+		});
+
+
+
+	   });
+	   
+
+
+	})
 
 });
 

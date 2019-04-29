@@ -38,7 +38,10 @@ const usuarioSchema=new Schema({
       verificado:{
           type:Boolean,
           default:false
-      }
+      },
+      resetPasswordToken:String,
+      resetPasswordExpires:Date
+
 
 });
 

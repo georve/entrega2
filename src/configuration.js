@@ -13,4 +13,4 @@ process.env.URLDB = urlDB;
 
 process.env.EMAIL="coordinadornode2019@gmail.com";
 
-process.env.SENGRID_API_KEY='abc'
+process.env.SENGRID_API_KEY=process.env.SENGRID_API_KEY||'abc'
