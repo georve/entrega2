@@ -103,7 +103,7 @@ hbs.registerHelper('listarEstInscritos', (listaInscritos,listaCursos) => {
 			texto = texto + "<div class='accordion' id='accordionExample'>";
 			i = 1;   
 			listaCursos.forEach(curso => {
-				if (curso.estado == 'disponible') {
+				
 					let inscritos = listaInscritos.filter(est => est.curso == curso.id_curso);
 					if (inscritos != null && Object.keys(inscritos).length != 0) {
 						texto = texto + 
@@ -131,7 +131,7 @@ hbs.registerHelper('listarEstInscritos', (listaInscritos,listaCursos) => {
 							</div>
 						</div>`
 					}
-				}
+				
 				
 				i = i + 1;
 			

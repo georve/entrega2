@@ -121,6 +121,7 @@ const listarEstInscritos = (listaEstInscritos) => {
 		"<th>Correo</th>"+
 		"<th>Telefono</th>"+
 		"<th>Eliminar</th>"+
+		"<th>Ver Archivo</th>"+
 		"</thead>"+
 		"<tbody>";
 
@@ -132,6 +133,36 @@ const listarEstInscritos = (listaEstInscritos) => {
 				'<td>'+ inscrito.correo + '</td>' +
 				'<td>'+ inscrito.telefono + '</td>'+
 				"<td><a href='/eliminarInscrito?doc="+ inscrito.doc +"&curso="+ inscrito.curso +"' class='btn btn-danger' role='button' aria-pressed='true'>Eliminar</a></td>"+
+				`<td>
+				<div class="container">
+				  <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#myModal">Modal 1</button>
+		
+				  <!-- Modal -->
+				  <div class="modal fade" id="myModal" role="dialog">
+					<div class="modal-dialog">
+		
+					  <!-- Modal content-->
+					  <div class="modal-content">
+						<div class="modal-header">
+						  <button type="button" class="close" data-dismiss="modal">&times;</button>
+						  <h4 class="modal-title">Modal Title Example</h4>
+						</div>
+						    <div class="modal-body">
+						        <div class="embed-responsive embed-responsive-4by3">
+						            <object data="data:application/pdf;base64,`+inscrito.file.toString('base64')+`" type="application/pdf">
+						            </object>
+					            </div>		
+						</div>
+						<div class="modal-footer">
+						  <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+						</div>
+					  </div>
+		
+					</div>
+				  </div>
+		
+				</div>
+			  </td>`+
 				'</tr>';
 		
 		});

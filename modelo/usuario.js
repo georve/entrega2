@@ -34,8 +34,13 @@ const usuarioSchema=new Schema({
       rol:{
           type:String,
           default:'aspirante'
-      }
-
+      },
+      verificado:{
+          type:Boolean,
+          default:false
+      },
+      resetPasswordToken:String,
+      resetPasswordExpires:Date
 
 
 });

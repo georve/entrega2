@@ -3,5 +3,10 @@
  {{{mensaje}}}
  {{#if inscritos_curso}}
 	<p> {{{listarInscritosCurso id_curso inscritos_curso}}} </p>
+	<br>
+	<div class="embed-responsive embed-responsive-4by3">
+            <object data="data:application/pdf;base64,{{imagen}}" type="application/pdf">
+            </object>
+        </div>
  {{/if}}
 {{>footer}}

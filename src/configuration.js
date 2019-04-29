@@ -9,4 +9,8 @@ else {
 	urlDB = 'mongodb+srv://georve:oPaEv7YOmgWt39mq@nodecursejs-lddv7.mongodb.net/estudiantes?retryWrites=true'
 }
 
-process.env.URLDB = urlDB
+process.env.URLDB = urlDB;
+
+process.env.EMAIL="coordinadornode2019@gmail.com";
+
+process.env.SENGRID_API_KEY=process.env.SENGRID_API_KEY||'abc'

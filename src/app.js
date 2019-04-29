@@ -2,13 +2,18 @@ const express=require('express');
 const app=express();
 const path=require('path');
 const hbs=require('hbs');
+const sgMail=require('@sendgrid/mail');
 const bodyParser=require('body-parser');
 const mongoose=require('mongoose');
 const Curso=require('../modelo/cursos');
 const Inscrito=require('../modelo/inscritos');
 const Usuario=require('../modelo/usuario');
+const Token=require('../modelo/token');
+const multer=require('multer');
 //const bcrypt=require('bcrypt');
 const session=require('express-session');
+const crypto=require('crypto');
+
 require ('./helper');
 require('./configuration');
 const directoriopublico=path.join(__dirname,'../public');
@@ -21,12 +26,33 @@ const directoriobootstrapjs = path.join(__dirname,'../node_modules/bootstrap/dis
 app.use(express.static(directoriopublico));
 hbs.registerPartials(directoriopartials);
 app.use(bodyParser.urlencoded({extended:false}));
-
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 app.set('view engine','hbs');
 app.use('/css', express.static(directoriobootstrapcss));
 app.use('/js', express.static(directoriojquery));
 app.use('/js', express.static(directoriopopper));
 app.use('/js', express.static(directoriobootstrapjs));
+
+var storage=multer.diskStorage({
+	destination:function(req,file,cb){
+        cb(null,'public/upload')
+	},
+	filename:function(req,file,cb){
+		cb(null,file.originalname)
+	}
+})
+
+var upload=multer({
+	limits:{
+		fileSize:10000000
+	},
+	fileFilter(req,file,cb){
+		if(!file.originalname.match(/\.(pdf)$/)){
+			return cb(new Error('Archivo no es pdf'))
+		}
+		cb(null,true);
+	}
+});
 
 app.use(function (req, res, next) {
     res.header('Cache-Control', 'private, no-cache, no-store, must-revalidate');
@@ -43,12 +69,60 @@ app.use(session({
 }));
 
 app.use((req,res,next)=>{
-	if(req.session.usuario){
+	if(req.session.usuario){		
 		res.locals.sesion=true;
 		res.locals.nombre=req.session.nombre;
 	}
     next();
 });
+
+app.get('/confirmacion',(req,res)=>{
+	//find token
+	Token.findOne({token:req.query.token},(err,resultado)=>{
+		if(err){
+			return res.render('register',{
+				mensaje:'Error al validar el token'
+			});
+		}
+
+		if(!resultado){
+			return res.render('register',{
+				mensaje:'No se puede validar la cuenta'
+			});
+		}
+
+		// valida la cuenta
+		Usuario.findOne({_id:resultado._userId},(err,user)=>{
+			if(err){
+				return res.render('register',{
+					mensaje:'No se encuentra el usuario'
+				});
+			}
+
+			if(user.verificado){
+				return res.render('register',{
+					mensaje:'Usuario Ya verificado'
+				});
+			}
+
+			user.verificado=true;
+			user.save((err,saved)=>{
+				if(err){
+					return res.render('register',{
+						mensaje:'error salvando usuario'
+					});
+				}
+
+				res.render('login',{
+					mensaje:'Cuenta Verificada. Por favor Ingrese'
+				});
+
+			})
+
+		})
+
+	});
+})
 
 
 app.post('/registrar',(req,res)=>{
@@ -60,6 +134,8 @@ app.post('/registrar',(req,res)=>{
 		password:req.body.password,
 		rol:'aspirante'
 	});
+
+
     console.log(usuario);
 	Usuario.find({doc:req.body.documento,correo:req.body.email}).exec((err,encontrado)=>{
 		if(err){
@@ -75,11 +151,30 @@ app.post('/registrar',(req,res)=>{
 						mensaje:'Error al registrar al Usuario'
 					});
 				}
-                console.log(resultado);
-				res.render('register',{
-					mensaje:'Registro Exitoso'
-				});
 
+                var token=new Token({_userId:resultado._id,token:crypto.randomBytes(16).toString('hex')});
+                token.save((err,tokenSaved)=>{
+                    if(err){
+						console.log(err);
+						return res.render('register',{
+							mensaje:'Error al generar token de activacion'
+						}); 
+					}
+
+					const msg={
+						to:resultado.correo,
+						from:process.env.EMAIL,
+						subject:'Bienvenido',
+						text:'Bienvenido a la pagina Sr(a) '+resultado.nombre+'\n\n Por favor verifique su cuenta clickando en link: \nhttp:\/\/'+req.headers.host+'\/confirmacion\?token='+tokenSaved.token+'\n'
+					};
+
+					sgMail.send(msg);
+					console.log(resultado);
+					res.render('register',{
+						mensaje:'Correo de verificacion Enviado'
+					});
+
+				});
 
 			});
 		}else{
@@ -113,6 +208,12 @@ app.post('/login',(req,res)=>{
 		if(resultado.password!=req.body.password){
 			return 	res.render('login',{
 				mensaje:'Password Invalido'
+			   });
+		}
+
+		if(!resultado.verificado){
+			return 	res.render('login',{
+				mensaje:'Cuenta No validada'
 			   });
 		}
 
@@ -155,10 +256,19 @@ app.get('/',(req,res)=>{
         doc: '0',
         nombre: 'Coordinador',
         password: '12345',
-        correo: 'coordinador@gmail.com',
+        correo: process.env.EMAIL,
         telefono: '0',
-        rol:'coordinador'
-    })
+		rol:'coordinador',
+		verificado:true
+	});
+	
+	const msg={
+		to:process.env.EMAIL,
+		from:process.env.EMAIL,
+		subject:'Bienvenido',
+		text:'Bienvenido a la paginas de cursos',
+		html: '<strong>Generacion del correo de prueba al usuario Coordinador</strong>'
+	};
 
     Usuario.find({doc:'0', rol:'coordinador'}).exec((err, encontrado)=> {
         if (err) {
@@ -172,6 +282,7 @@ app.get('/',(req,res)=>{
                     console.log(err);
                 }else{
 					console.log('usuario creado');
+					sgMail.send(msg);
 				}
    
             });
@@ -181,15 +292,6 @@ app.get('/',(req,res)=>{
         
 
     })
-
-
-
-
-
-
-
-
-
 	}
 
 });
@@ -274,7 +376,7 @@ app.get('/vercursos', (req,res) => {
 
 
 
-app.post('/inscribirResultado', (req,res) => {
+app.post('/inscribirResultado',upload.single('file'), (req,res) => {
 
 
 
@@ -283,7 +385,8 @@ app.post('/inscribirResultado', (req,res) => {
 		nombre: req.body.nombre,
 		correo: req.body.correo,
 		telefono: req.body.telefono,
-		curso: parseInt(req.body.curso)
+		curso: parseInt(req.body.curso),
+		file:req.file.buffer
 	});
 
 	Inscrito.find({doc:req.body.doc,curso:req.body.curso}).exec((err,encontrado)=>{
@@ -319,6 +422,7 @@ app.post('/inscribirResultado', (req,res) => {
 							id_curso: resultadoSaved.curso,
 							inscritos_curso: inscritos,
 							mensaje: "<div class='alert alert-success' role='alert'>El estudiante "+ resultadoSaved.doc + " fue inscrito en el curso "+ resultadoSaved.id_curso +" satisfactoriamente</div>",
+							imagen:resultadoSaved.file.toString('base64'),
 							nombre:req.session.nombre,
 							coordinador:req.session.rol=='coordinador',
 							aspirante:req.session.rol=='aspirante'
@@ -386,6 +490,145 @@ app.get('/inscribir', (req,res) => {
 
 
 	});
+
+});
+
+app.get('/forgetPassword',(req,res)=>{
+	res.render('olvidoPassword',{
+		mensaje:''
+	});
+
+});
+
+app.post('/forgetPassword',(req,res)=>{
+
+	Usuario.findOne({correo:req.body.email},(err,resultado)=>{
+		if(err){
+		 return	console.log(err);
+		}
+
+		if(!resultado){
+			console.log('No encontrado');
+           return 	res.render('olvidoPassword',{
+			            mensaje:'Usuario no existe'
+		               });
+		}
+		console.log(resultado);
+
+		var token=new Token({_userId:resultado._id,token:crypto.randomBytes(16).toString('hex')});
+		token.save((err,tokenSaved)=>{
+			if(err){
+				console.log(err);
+				return res.render('olvidoPassword',{
+					mensaje:'Error al generar token de reset'
+				}); 
+			}
+
+			resultado.resetPasswordToken=tokenSaved.token;
+			resultado.resetPasswordExpires=Date.now() + 3600000;
+
+			resultado.save((err,exito)=>{
+               if(err){
+				console.log(err);
+				return res.render('olvidoPassword',{
+					mensaje:'Error al producir el reset'
+				}); 
+			   }
+
+			   const msg={
+				to:resultado.correo,
+				from:process.env.EMAIL,
+				subject:'Reset correo',
+				text:' Sr(a) '+resultado.nombre+'\n\n Para resetear la cuente presione el link link: \nhttp:\/\/'+req.headers.host+'\/reset\/'+tokenSaved.token+'\n'
+			};
+			sgMail.send(msg);
+			res.render('olvidoPassword',{
+				mensaje:'Correo de reseteo Enviado'
+			});
+
+
+			})
+
+		});
+
+
+
+
+
+	})
+
+	
+});
+
+app.get('/reset/:token',(req,res)=>{
+	Usuario.findOne({resetPasswordToken:req.params.token,resetPasswordExpires:{ $gt: Date.now() }},(err,resultado)=>{
+       if(err){
+		   console.log(err);
+		   return res.redirect('/forgetPassword');
+	   }
+
+	   if(!resultado){
+		console.log('No existe el token');
+		return res.render('olvidoPassword',{
+           mensaje:'Token expirado'
+		});
+	   }
+
+	   res.render('resetPassword',{
+		   mensaje:'',
+		   token:resultado
+	   })
+
+
+	})
+
+});
+
+app.post('/reset/:token',(req,res)=>{
+	console.log('/resetPost');
+	console.log(req.params.token);
+	Usuario.findOne({resetPasswordToken:req.params.token,resetPasswordExpires:{ $gt: Date.now() }},(err,resultado)=>{
+       if(err){
+		return res.render('resetPassword',{
+			mensaje:'Token expirado'
+		 });
+	   }
+
+	   if(!resultado){
+		return res.render('resetPassword',{
+           mensaje:'Token expirado'
+		});
+	   }
+
+	   resultado.password=req.body.password;
+	   resultado.resetPasswordToken = undefined;
+	   resultado.resetPasswordExpires = undefined;
+
+	   resultado.save((err,saved)=>{
+          if(err){
+			return res.render('resetPassword',{
+				mensaje:'Token expirado'
+			 });
+		  }
+
+		  const msg={
+			to:resultado.correo,
+			from:process.env.EMAIL,
+			subject:'Cambio de Contrasena',
+			text:' Sr(a) '+resultado.nombre+'\n\n La Constrasena fue modificada de manera exitosa \n'
+		};
+		sgMail.send(msg);
+		res.render('resetPassword',{
+			mensaje:'Csmbio de password exitoso'
+		});
+
+
+
+	   });
+	   
+
+
+	})
 
 });
 
